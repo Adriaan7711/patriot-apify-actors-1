@@ -1,0 +1,197 @@
+{
+    "title": "SEC Structured Filings — Allocator & Sponsor Mapper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "secUserAgent": {
+            "title": "SEC User-Agent (required)",
+            "type": "string",
+            "description": "The SEC requires a descriptive User-Agent with a real contact email on every automated request. Format: \"Company Name email@domain.com\". Runs without this will fail.",
+            "editor": "textfield",
+            "prefill": "Patriot Holdings jer@patriotholdings.com"
+        },
+        "sources": {
+            "title": "Sources to pull",
+            "type": "array",
+            "description": "Form D = private-offering sponsors and their related persons (EDGAR). Form ADV = registered and exempt reporting advisers (SEC monthly bulk report).",
+            "editor": "select",
+            "items": {
+                "type": "string",
+                "enum": ["formD", "formADV"],
+                "enumTitles": ["Form D — sponsors & related persons", "Form ADV — RIAs & exempt reporting advisers"]
+            },
+            "default": ["formD", "formADV"]
+        },
+        "outputMode": {
+            "title": "Emit firms, people, or both",
+            "type": "string",
+            "editor": "select",
+            "enum": ["both", "firm", "person"],
+            "enumTitles": ["Both firm and person rows", "Firm rows only", "Person rows only"],
+            "default": "both"
+        },
+        "formDMode": {
+            "title": "Form D discovery mode",
+            "type": "string",
+            "description": "daily_index sweeps every Form D filed in the lookback window (complete, filtered structurally — use this for the scheduled run). full_text searches EDGAR full-text for thesis keywords (cheap and targeted). quarterly loads SEC bulk data sets (use once, for backfill).",
+            "editor": "select",
+            "enum": ["daily_index", "full_text", "quarterly"],
+            "enumTitles": ["Daily index sweep", "Full-text keyword search", "Quarterly bulk backfill"],
+            "default": "daily_index",
+            "sectionCaption": "Form D options"
+        },
+        "lookbackDays": {
+            "title": "Lookback days",
+            "type": "integer",
+            "description": "How far back to look. 30 suits a weekly scheduled run; full-text mode tolerates 365+.",
+            "editor": "number",
+            "default": 30,
+            "minimum": 1,
+            "maximum": 3650
+        },
+        "fullTextQueries": {
+            "title": "Full-text queries",
+            "type": "array",
+            "description": "Only used in full_text mode. Each phrase is searched as an exact phrase across Form D filings.",
+            "editor": "stringList",
+            "default": [
+                "manufactured housing",
+                "mobile home community",
+                "self storage",
+                "industrial outdoor storage",
+                "small bay industrial",
+                "flex industrial",
+                "Delaware statutory trust",
+                "1031 exchange"
+            ]
+        },
+        "maxPerQuery": {
+            "title": "Max hits per full-text query",
+            "type": "integer",
+            "editor": "number",
+            "default": 300,
+            "maximum": 10000
+        },
+        "quarters": {
+            "title": "Quarters to backfill",
+            "type": "array",
+            "description": "Only used in quarterly mode. Format: 2026q1, 2025q4, ...",
+            "editor": "stringList",
+            "default": []
+        },
+        "includeAmendments": {
+            "title": "Include Form D/A amendments",
+            "type": "boolean",
+            "description": "Amendments often carry the updated amount-sold figure, which is the strongest signal that a sponsor is actively raising.",
+            "default": true
+        },
+        "industryGroups": {
+            "title": "Form D industry groups to keep",
+            "type": "array",
+            "description": "Form D's own industryGroupType values. Leave at the default to keep real-asset and pooled-fund filings and drop everything else.",
+            "editor": "stringList",
+            "default": [
+                "Commercial",
+                "Construction",
+                "REITS and Finance",
+                "Residential",
+                "Other Real Estate",
+                "Pooled Investment Fund",
+                "Investing",
+                "Other Banking and Financial Services"
+            ]
+        },
+        "minOfferingAmount": {
+            "title": "Minimum total offering amount ($)",
+            "type": "integer",
+            "editor": "number",
+            "default": 1000000
+        },
+        "maxOfferingAmount": {
+            "title": "Maximum total offering amount ($)",
+            "type": "integer",
+            "description": "Screens out mega-institutional raises. Filings that report an indefinite offering (the $100B sentinel) are never dropped by this rule. 0 disables it.",
+            "editor": "number",
+            "default": 500000000
+        },
+        "requirePooledFund": {
+            "title": "Only pooled investment funds",
+            "type": "boolean",
+            "description": "Narrows Form D to fund vehicles rather than single-asset deals.",
+            "default": false
+        },
+        "includeStates": {
+            "title": "Limit to states",
+            "type": "array",
+            "description": "Two-letter codes. Empty = nationwide.",
+            "editor": "stringList",
+            "default": []
+        },
+        "advFeeds": {
+            "title": "Form ADV feeds",
+            "type": "array",
+            "editor": "select",
+            "items": {
+                "type": "string",
+                "enum": ["registered", "exempt"],
+                "enumTitles": ["Registered investment advisers", "Exempt reporting advisers"]
+            },
+            "default": ["registered", "exempt"],
+            "sectionCaption": "Form ADV options"
+        },
+        "advMinRaum": {
+            "title": "Minimum RAUM ($)",
+            "type": "integer",
+            "description": "Floor on regulatory assets under management. 100000000 keeps advisers big enough to write a real check.",
+            "editor": "number",
+            "default": 100000000
+        },
+        "advMaxRaum": {
+            "title": "Maximum RAUM ($)",
+            "type": "integer",
+            "description": "Ceiling that screens out mega-institutional advisers who will not look at a fund this size. 0 disables it.",
+            "editor": "number",
+            "default": 5000000000
+        },
+        "advStates": {
+            "title": "Limit ADV to states",
+            "type": "array",
+            "editor": "stringList",
+            "default": []
+        },
+        "advMaxRows": {
+            "title": "Max ADV rows to read per feed",
+            "type": "integer",
+            "editor": "number",
+            "default": 100000
+        },
+        "minSectorFitScore": {
+            "title": "Minimum sector-fit score",
+            "type": "integer",
+            "description": "Records score positive on MHC / storage / industrial / IOS / 1031 language and negative on multifamily-only, farmland, venture, crypto and similar. 0 keeps anything not actively against the thesis.",
+            "editor": "number",
+            "default": 0,
+            "sectionCaption": "Mandate filters and output"
+        },
+        "excludeFirmNames": {
+            "title": "Firms already in the database",
+            "type": "array",
+            "description": "Paste your existing investor list here to suppress duplicates. Matching is on a normalized name, so \"Acme Capital, LLC\" and \"ACME CAPITAL\" collapse to one.",
+            "editor": "stringList",
+            "default": []
+        },
+        "keepExcludedForReview": {
+            "title": "Keep excluded records, flagged",
+            "type": "boolean",
+            "description": "Instead of dropping records that fail the exclusion or score rules, emit them with excluded_reason populated so you can audit what the filters are throwing away.",
+            "default": false
+        },
+        "maxRecords": {
+            "title": "Max records to output",
+            "type": "integer",
+            "editor": "number",
+            "default": 5000
+        }
+    },
+    "required": ["secUserAgent"]
+}

@@ -1,0 +1,13 @@
+{
+    "actorSpecification": 1,
+    "name": "patriot-sec-edgar-allocators",
+    "title": "SEC Structured Filings — Allocator & Sponsor Mapper",
+    "description": "Pulls Form D (EDGAR) sponsors + related persons and Form ADV (IARD) registered/exempt advisers, filters them against the Patriot Holdings real-asset mandate, and emits one flat Clay-ready dataset.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "input": "./input_schema.json",
+    "dockerfile": "./Dockerfile",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    }
+}

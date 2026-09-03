@@ -1,0 +1,32 @@
+{
+    "actorSpecification": 1,
+    "views": {
+        "overview": {
+            "title": "Prospects",
+            "transformation": {
+                "fields": [
+                    "record_type", "persona_hint", "sector_fit_score",
+                    "firm_name", "person_full_name", "person_title",
+                    "address_city", "address_state", "industry_group",
+                    "total_offering_amount", "raum_usd", "filing_date",
+                    "filing_url", "dedupe_key"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "record_type": { "label": "Type" },
+                    "persona_hint": { "label": "Persona" },
+                    "sector_fit_score": { "label": "Fit" },
+                    "firm_name": { "label": "Firm" },
+                    "person_full_name": { "label": "Contact" },
+                    "person_title": { "label": "Title" },
+                    "address_state": { "label": "ST" },
+                    "total_offering_amount": { "label": "Offering $" },
+                    "raum_usd": { "label": "RAUM $" },
+                    "filing_url": { "label": "Filing" }
+                }
+            }
+        }
+    }
+}
